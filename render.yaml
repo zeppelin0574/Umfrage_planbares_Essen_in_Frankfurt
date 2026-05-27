@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: umfrage-planbares-essen-frankfurt
+    runtime: python
+    repo: https://github.com/zeppelin0574/Umfrage_planbares_Essen_in_Frankfurt.git
+    branch: main
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: umfrage-planbares-essen-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: umfrage-planbares-essen-db
+    databaseName: umfrage_frankfurt
+    user: umfrage_user
+    region: frankfurt
+    plan: free
