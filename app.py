@@ -178,13 +178,19 @@ def create_app():
 def get_database_uri():
     database_url = os.getenv("DATABASE_URL")
     if database_url:
-        if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://", 1)
-        return database_url
+        return normalize_database_url(database_url)
 
     data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
     os.makedirs(data_dir, exist_ok=True)
     return "sqlite:///" + os.path.join(data_dir, "survey.db")
+
+
+def normalize_database_url(database_url):
+    if database_url.startswith("postgres://"):
+        return database_url.replace("postgres://", "postgresql+psycopg://", 1)
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return database_url
 
 
 def is_production():
