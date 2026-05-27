@@ -194,6 +194,8 @@ def normalize_database_url(database_url):
 
 
 def is_production():
+    if os.getenv("LOCAL_DEV", "").lower() in {"1", "true", "yes"}:
+        return False
     return os.getenv("APP_ENV", "development").lower() == "production"
 
 
