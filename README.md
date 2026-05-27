@@ -74,9 +74,9 @@ In production, the app refuses to start if `DATABASE_URL`, `SECRET_KEY`, and eit
 
 Recommended admin password:
 
-- at least 16 characters
+- at least 8 characters
+- letters and numbers are required
 - uppercase and lowercase letters
-- numbers
 - special characters
 - unique to this app
 
@@ -86,7 +86,7 @@ Do not commit `.env` to Git. In production, prefer environment variables or a de
 
 On first start, the app initializes an admin password hash in the database from `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`. The plaintext password is not stored in the database.
 
-After logging in, the admin dashboard includes a password-change form. New admin passwords must be at least 16 characters.
+After logging in, the admin dashboard includes a password-change form. New admin passwords must be at least 8 characters and contain both letters and numbers.
 
 If `ADMIN_PASSWORD` is missing in local development, the app allows the fallback password `admin123` and prints a console warning. This fallback is blocked in production by the required environment checks.
 

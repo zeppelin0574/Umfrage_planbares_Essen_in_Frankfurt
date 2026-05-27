@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Report</title>
+  <title>Admin-Report</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -11,58 +11,58 @@
     <header class="admin-header">
       <div>
         <p class="eyebrow">Admin</p>
-        <h1>Seminar-Report || Seminar report</h1>
+        <h1>Seminar-Report</h1>
       </div>
       <div class="admin-actions">
-        <a class="button-link secondary-link" href="{{ url_for('admin_export') }}{% if export_query %}?{{ export_query }}{% endif %}">Dashboard || Dashboard</a>
+        <a class="button-link secondary-link" href="{{ url_for('admin_export') }}{% if export_query %}?{{ export_query }}{% endif %}">Dashboard</a>
         <form method="post" action="{{ url_for('admin_logout') }}">
-          <button class="secondary-button" type="submit">Logout</button>
+          <button class="secondary-button" type="submit">Ausloggen</button>
         </form>
       </div>
     </header>
 
     <section class="admin-card report-card">
-      <h2>Zusammenfassung || Summary</h2>
-      <p>Total responses: {{ report.all_total }}</p>
+      <h2>Zusammenfassung</h2>
+      <p>Antworten insgesamt: {{ report.all_total }}</p>
       {% if report.filters_active %}
-        <p>Total responses after filters: {{ report.filtered_total }}</p>
+        <p>Antworten nach Filterung: {{ report.filtered_total }}</p>
       {% endif %}
 
-      <h3>Top 3 usual lunch types</h3>
+      <h3>Top 3: Übliche Mittagessen</h3>
       <ul>
-        {% for row in report.top_lunch_types %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>No data</li>{% endfor %}
+        {% for row in report.top_lunch_types %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>Keine Daten</li>{% endfor %}
       </ul>
 
-      <h3>Top 3 lunch problems</h3>
+      <h3>Top 3: Probleme beim Mittagessen</h3>
       <ul>
-        {% for row in report.top_lunch_problems %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>No data</li>{% endfor %}
+        {% for row in report.top_lunch_problems %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>Keine Daten</li>{% endfor %}
       </ul>
 
-      <h3>Most common fair price range</h3>
-      <p>{% for row in report.most_common_price %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}No data{% endfor %}</p>
+      <h3>Häufigste faire Preisspanne</h3>
+      <p>{% for row in report.most_common_price %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}Keine Daten{% endfor %}</p>
 
-      <h3>Positive preorder willingness</h3>
+      <h3>Positive Vorbestellbereitschaft</h3>
       <p>{{ report.positive_preorder_percentage }}%</p>
 
-      <h3>Most common lunch time</h3>
-      <p>{% for row in report.most_common_lunch_time %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}No data{% endfor %}</p>
+      <h3>Häufigste Mittagszeit</h3>
+      <p>{% for row in report.most_common_lunch_time %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}Keine Daten{% endfor %}</p>
 
-      <h3>Most common area</h3>
-      <p>{% for row in report.most_common_area %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}No data{% endfor %}</p>
+      <h3>Häufigster Bereich</h3>
+      <p>{% for row in report.most_common_area %}{{ row.label }}: {{ row.count }} ({{ row.percentage }}%){% else %}Keine Daten{% endfor %}</p>
 
-      <h3>Top 3 reasons against using the offer</h3>
+      <h3>Top 3: Gründe gegen die Nutzung</h3>
       <ul>
-        {% for row in report.top_reasons %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>No data</li>{% endfor %}
+        {% for row in report.top_reasons %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>Keine Daten</li>{% endfor %}
       </ul>
 
-      <h3>Source platform distribution</h3>
+      <h3>Verteilung nach Quelle</h3>
       <ul>
-        {% for row in report.sources %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>No data</li>{% endfor %}
+        {% for row in report.sources %}<li>{{ row.label }}: {{ row.count }} ({{ row.percentage }}%)</li>{% else %}<li>Keine Daten</li>{% endfor %}
       </ul>
 
-      <h3>Latest non-empty comments</h3>
+      <h3>Neueste nicht-leere Kommentare</h3>
       <ol>
-        {% for comment in report.latest_comments %}<li>{{ comment }}</li>{% else %}<li>No comments</li>{% endfor %}
+        {% for comment in report.latest_comments %}<li>{{ comment }}</li>{% else %}<li>Keine Kommentare</li>{% endfor %}
       </ol>
     </section>
   </main>

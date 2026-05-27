@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Dashboard</title>
+  <title>Admin-Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -11,7 +11,7 @@
     {% if not admin_logged_in %}
       <section class="card login-card">
         <p class="eyebrow">Admin</p>
-        <h1>Admin Login</h1>
+        <h1>Admin-Login</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -25,22 +25,22 @@
 
         <form method="post" action="{{ url_for('admin') }}" class="login-form">
           <label>
-            <span>Passwort || Password</span>
+            <span>Passwort</span>
             <input type="password" name="password" required autofocus>
           </label>
-          <button type="submit">Einloggen || Log in</button>
+          <button type="submit">Einloggen</button>
         </form>
       </section>
     {% else %}
       <header class="admin-header">
         <div>
           <p class="eyebrow">Admin</p>
-          <h1>Statistik und Export || Statistics and export</h1>
+          <h1>Statistik und Export</h1>
         </div>
         <div class="admin-actions">
-          <a class="button-link secondary-link" href="{{ url_for('admin_report') }}{% if export_query %}?{{ export_query }}{% endif %}">Report || Report</a>
+          <a class="button-link secondary-link" href="{{ url_for('admin_report') }}{% if export_query %}?{{ export_query }}{% endif %}">Report</a>
           <form method="post" action="{{ url_for('admin_logout') }}">
-            <button class="secondary-button" type="submit">Logout</button>
+            <button class="secondary-button" type="submit">Ausloggen</button>
           </form>
         </div>
       </header>
@@ -58,28 +58,28 @@
       <section class="export-panel">
         <div>
           <h2>Export</h2>
-          <p>Aktive Filter werden in den CSV-Exports berücksichtigt. || Active filters are applied to CSV exports.</p>
+          <p>Aktive Filter werden in den CSV-Exports berücksichtigt.</p>
         </div>
         <div class="export-actions">
-          <a class="button-link" href="{{ url_for('export_stats_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Statistik CSV || Statistics CSV</a>
-          <a class="button-link secondary-link" href="{{ url_for('export_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Antworten CSV || Responses CSV</a>
+          <a class="button-link" href="{{ url_for('export_stats_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Statistik-CSV</a>
+          <a class="button-link secondary-link" href="{{ url_for('export_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Antworten-CSV</a>
         </div>
       </section>
 
       <section class="admin-card filters-card">
-        <h2>Filter || Filters</h2>
+        <h2>Filter</h2>
         <form method="get" action="{{ url_for('admin_export') }}" class="filters-form">
           {% for field, label in [
-            ('source_platform', 'Quelle || Source'),
-            ('q_area', 'Bereich || Area'),
-            ('q_lunch_time', 'Mittagszeit || Lunch time'),
-            ('q3_price', 'Preis || Price'),
-            ('q4_preorder', 'Vorbestellen || Pre-order')
+            ('source_platform', 'Quelle'),
+            ('q_area', 'Bereich'),
+            ('q_lunch_time', 'Mittagszeit'),
+            ('q3_price', 'Preis'),
+            ('q4_preorder', 'Vorbestellen')
           ] %}
             <label>
               <span>{{ label }}</span>
               <select name="{{ field }}">
-                <option value="">Alle || All</option>
+                <option value="">Alle</option>
                 {% for value, option_label in filter_options[field] %}
                   <option value="{{ value }}" {% if filters.get(field) == value %}selected{% endif %}>{{ option_label }}</option>
                 {% endfor %}
@@ -87,14 +87,14 @@
             </label>
           {% endfor %}
           <div class="filter-buttons">
-            <button type="submit">Anwenden || Apply</button>
-            <a class="button-link secondary-link" href="{{ url_for('admin_export') }}">Zurücksetzen || Reset</a>
+            <button type="submit">Anwenden</button>
+            <a class="button-link secondary-link" href="{{ url_for('admin_export') }}">Zurücksetzen</a>
           </div>
         </form>
       </section>
 
       <section class="metric-card">
-        <span>Displayed responses</span>
+        <span>Angezeigte Antworten</span>
         <strong>{{ stats.total }}</strong>
       </section>
 
@@ -114,7 +114,7 @@
                   </div>
                 </div>
               {% else %}
-                <p class="muted">Keine Daten || No data</p>
+                <p class="muted">Keine Daten</p>
               {% endfor %}
             </div>
           </section>
@@ -122,21 +122,21 @@
       </section>
 
       <section class="admin-card table-card">
-        <h2>Neueste 20 gefilterte Antworten || Latest 20 filtered responses</h2>
+        <h2>Neueste 20 gefilterte Antworten</h2>
         <div class="table-wrap">
           <table class="admin-table">
             <thead>
               <tr>
-                <th>created_at</th>
-                <th>source_platform</th>
-                <th>q1_lunch_type</th>
-                <th>q2_problems</th>
-                <th>q3_price</th>
-                <th>q4_preorder</th>
-                <th>q5_reason_not_use</th>
-                <th>q_lunch_time</th>
-                <th>q_area</th>
-                <th>comments</th>
+                <th>Zeitpunkt</th>
+                <th>Quelle</th>
+                <th>Mittagessen</th>
+                <th>Probleme</th>
+                <th>Preis</th>
+                <th>Vorbestellen</th>
+                <th>Grund dagegen</th>
+                <th>Mittagszeit</th>
+                <th>Bereich</th>
+                <th>Kommentar</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +155,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="10">Noch keine Antworten. || No responses yet.</td>
+                  <td colspan="10">Noch keine Antworten.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -164,31 +164,32 @@
       </section>
 
       <section class="admin-card settings-card">
-        <h2>Admin-Passwort ändern || Change admin password</h2>
+        <h2>Admin-Passwort ändern</h2>
+        <p class="muted">Mindestens 8 Zeichen, mit Buchstaben und Zahlen.</p>
         <form method="post" action="{{ url_for('change_admin_password') }}" class="settings-form">
           <label>
-            <span>Aktuelles Passwort || Current password</span>
+            <span>Aktuelles Passwort</span>
             <input type="password" name="current_password" required>
           </label>
           <label>
-            <span>Neues Passwort || New password</span>
-            <input type="password" name="new_password" minlength="16" required>
+            <span>Neues Passwort</span>
+            <input type="password" name="new_password" minlength="8" pattern="(?=.*[A-Za-zÄÖÜäöüß])(?=.*\d).{8,}" required>
           </label>
           <label>
-            <span>Neues Passwort wiederholen || Repeat new password</span>
-            <input type="password" name="confirm_password" minlength="16" required>
+            <span>Neues Passwort wiederholen</span>
+            <input type="password" name="confirm_password" minlength="8" pattern="(?=.*[A-Za-zÄÖÜäöüß])(?=.*\d).{8,}" required>
           </label>
-          <button type="submit">Passwort speichern || Save password</button>
+          <button type="submit">Passwort speichern</button>
         </form>
       </section>
 
       {% if allow_clear_data %}
         <section class="admin-card danger-zone">
-          <h2>Testdaten löschen || Clear test data</h2>
-          <p>Diese Aktion löscht alle gespeicherten Antworten. In Produktion ist sie deaktiviert. || This action clears all saved responses. It is disabled in production.</p>
-          <form method="post" action="{{ url_for('clear_data') }}" onsubmit="return confirm('Are you sure you want to clear all data?');">
+          <h2>Testdaten löschen</h2>
+          <p>Diese Aktion löscht alle gespeicherten Antworten. In Produktion ist sie deaktiviert.</p>
+          <form method="post" action="{{ url_for('clear_data') }}" onsubmit="return confirm('Sind Sie sicher, dass alle Daten gelöscht werden sollen?');">
             <input type="hidden" name="confirm_clear" value="yes">
-            <button class="danger-button" type="submit">Clear data</button>
+            <button class="danger-button" type="submit">Daten löschen</button>
           </form>
         </section>
       {% endif %}

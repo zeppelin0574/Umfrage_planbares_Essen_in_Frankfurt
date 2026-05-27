@@ -117,14 +117,14 @@ ALL_OPTION_SETS = {
 }
 
 STAT_SECTIONS = [
-    ("q1", "Q1 lunch type", "Frage 1: Mittagessen || Question 1: lunch"),
-    ("q2", "Q2 lunch problems", "Frage 2: Probleme || Question 2: problems"),
-    ("q3", "Q3 fair price", "Frage 3: Preis || Question 3: price"),
-    ("q4", "Q4 preorder willingness", "Frage 4: Vorbestellen || Question 4: pre-order"),
-    ("q5", "Q5 reason not to use", "Frage 5: Grund dagegen || Question 5: reason not to use"),
-    ("q_lunch_time", "Q6 lunch time", "Frage 6: Mittagspause || Question 6: lunch time"),
-    ("q_area", "Q7 area", "Frage 7: Bereich || Question 7: area"),
-    ("sources", "Source platform", "Quelle || Source"),
+    ("q1", "Q1 lunch type", "Frage 1: Mittagessen"),
+    ("q2", "Q2 lunch problems", "Frage 2: Probleme beim Mittagessen"),
+    ("q3", "Q3 fair price", "Frage 3: Fairer Preis"),
+    ("q4", "Q4 preorder willingness", "Frage 4: Vorbestellen"),
+    ("q5", "Q5 reason not to use", "Frage 5: Gründe gegen Nutzung"),
+    ("q_lunch_time", "Q6 lunch time", "Frage 6: Mittagszeit"),
+    ("q_area", "Q7 area", "Frage 7: Arbeits-/Essbereich"),
+    ("sources", "Source platform", "Quelle"),
 ]
 
 FILTER_FIELDS = ["source_platform", "q_area", "q_lunch_time", "q3_price", "q4_preorder"]
@@ -300,7 +300,7 @@ def register_routes(app):
             if verify_admin_password(password):
                 session["admin_logged_in"] = True
                 return redirect(url_for("admin_export"))
-            flash("Falsches Passwort. || Incorrect password.", "error")
+            flash("Falsches Passwort.", "error")
 
         return render_template("admin.html", admin_logged_in=False)
 
@@ -371,34 +371,34 @@ def register_routes(app):
         confirm_password = request.form.get("confirm_password", "")
 
         if not verify_admin_password(current_password):
-            flash("Aktuelles Passwort ist falsch. || Current password is incorrect.", "error")
+            flash("Aktuelles Passwort ist falsch.", "error")
             return redirect(url_for("admin_export"))
         if new_password != confirm_password:
-            flash("Neue Passwörter stimmen nicht überein. || New passwords do not match.", "error")
+            flash("Neue Passwörter stimmen nicht überein.", "error")
             return redirect(url_for("admin_export"))
-        if len(new_password) < 16:
-            flash("Das neue Passwort muss mindestens 16 Zeichen haben. || The new password must be at least 16 characters.", "error")
+        if not is_valid_admin_password(new_password):
+            flash("Das neue Passwort muss mindestens 8 Zeichen haben und Buchstaben sowie Zahlen enthalten.", "error")
             return redirect(url_for("admin_export"))
 
         setting = db.session.get(AdminSetting, "admin_password_hash")
         setting.value = generate_password_hash(new_password)
         db.session.commit()
-        flash("Admin-Passwort wurde aktualisiert. || Admin password has been updated.", "success")
+        flash("Admin-Passwort wurde aktualisiert.", "success")
         return redirect(url_for("admin_export"))
 
     @app.route("/admin/clear-data", methods=["POST"])
     @admin_required
     def clear_data():
         if is_production():
-            flash("Daten löschen ist in Produktion deaktiviert. || Clearing data is disabled in production.", "error")
+            flash("Daten löschen ist in Produktion deaktiviert.", "error")
             return redirect(url_for("admin_export"))
         confirmation = request.form.get("confirm_clear")
         if confirmation == "yes":
             db.session.query(ResponseEntry).delete()
             db.session.commit()
-            flash("Alle Testdaten wurden gelöscht. || All test data has been cleared.", "success")
+            flash("Alle Testdaten wurden gelöscht.", "success")
         else:
-            flash("Löschen wurde nicht bestätigt. || Clear action was not confirmed.", "error")
+            flash("Löschen wurde nicht bestätigt.", "error")
         return redirect(url_for("admin_export"))
 
     @app.route("/health")
@@ -431,6 +431,14 @@ def verify_admin_password(password):
     if not setting:
         return password == get_admin_password()
     return check_password_hash(setting.value, password)
+
+
+def is_valid_admin_password(password):
+    if len(password) < 8:
+        return False
+    has_letter = any(character.isalpha() for character in password)
+    has_digit = any(character.isdigit() for character in password)
+    return has_letter and has_digit
 
 
 def validate_submission(form):
@@ -515,10 +523,10 @@ def query_responses(filters):
 def load_filter_options():
     return {
         "source_platform": distinct_filter_options("source_platform"),
-        "q_area": AREA_OPTIONS,
-        "q_lunch_time": LUNCH_TIME_OPTIONS,
-        "q3_price": Q3_OPTIONS,
-        "q4_preorder": Q4_OPTIONS,
+        "q_area": german_options(AREA_OPTIONS),
+        "q_lunch_time": german_options(LUNCH_TIME_OPTIONS),
+        "q3_price": german_options(Q3_OPTIONS),
+        "q4_preorder": german_options(Q4_OPTIONS),
     }
 
 
@@ -588,12 +596,20 @@ def format_counts(counts, options, total):
     return [
         {
             "value": value,
-            "label": label,
+            "label": german_label(label),
             "count": counts.get(value, 0),
             "percentage": percentage(counts.get(value, 0), total),
         }
         for value, label in options
     ]
+
+
+def german_options(options):
+    return [(value, german_label(label)) for value, label in options]
+
+
+def german_label(label):
+    return label.split(" || ", 1)[0]
 
 
 def build_report(rows, stats, all_total, filters):
