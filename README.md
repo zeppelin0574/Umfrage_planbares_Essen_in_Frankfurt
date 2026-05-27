@@ -1,6 +1,12 @@
 # Bilingual Frankfurt / Rhein-Main Lunch Survey
 
-Small Flask web app for an anonymous student seminar survey about lunch habits of working people in Frankfurt and nearby Rhein-Main work areas such as Offenbach and Eschborn.
+Small Flask web app for an anonymous lunch habits survey among working people in Frankfurt and nearby Rhein-Main work areas such as Offenbach and Eschborn.
+
+The survey is part of a seminar project at the University of Marburg:
+
+```text
+Eine Seminararbeit an der Uni Marburg
+```
 
 ## Bilingual Format
 
@@ -29,13 +35,13 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open the survey page:
+Open the local survey page:
 
 ```text
 http://127.0.0.1:5000/
 ```
 
-When `DATABASE_URL` is not set, the app uses SQLite and creates:
+When `APP_ENV=development` and `DATABASE_URL` is not set, the app uses SQLite and creates:
 
 ```text
 data/survey.db
@@ -43,25 +49,28 @@ data/survey.db
 
 Existing SQLite databases are updated safely by adding missing columns when the app starts.
 
-## PostgreSQL Production Option
+## Environment Variables
 
-Set `DATABASE_URL` for PostgreSQL:
+Local `.env` example:
 
-```powershell
-$env:DATABASE_URL="postgresql://username:password@host:5432/database_name"
-python app.py
+```text
+APP_ENV=development
+FLASK_DEBUG=1
+ADMIN_PASSWORD=change-this-to-a-strong-password
+SECRET_KEY=change-this-to-a-long-random-secret-key
+# DATABASE_URL=postgresql://username:password@host:5432/database_name
 ```
 
-The app also accepts old `postgres://` URLs and converts them to `postgresql://`.
+Production must set:
 
-## Admin Password And Secret Key
-
-Set both values before deployment:
-
-```powershell
-$env:ADMIN_PASSWORD="your-strong-password"
-$env:SECRET_KEY="your-long-random-secret-key"
+```text
+APP_ENV=production
+DATABASE_URL=postgresql://username:password@host:5432/database_name
+ADMIN_PASSWORD=your-initial-strong-admin-password
+SECRET_KEY=your-long-random-secret-key
 ```
+
+In production, the app refuses to start if `DATABASE_URL`, `SECRET_KEY`, and either `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` are missing.
 
 Recommended admin password:
 
@@ -73,9 +82,46 @@ Recommended admin password:
 
 Do not commit `.env` to Git. In production, prefer environment variables or a deployment secret manager. Do not store production passwords in committed plaintext files.
 
-If `ADMIN_PASSWORD` is missing, the app allows a local development fallback password `admin123` and prints a console warning. If `SECRET_KEY` is missing, the app also uses a local development fallback and prints a warning. These fallbacks are only for local testing.
+## Admin Password
 
-`.env.example` shows the expected variables.
+On first start, the app initializes an admin password hash in the database from `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`. The plaintext password is not stored in the database.
+
+After logging in, the admin dashboard includes a password-change form. New admin passwords must be at least 16 characters.
+
+If `ADMIN_PASSWORD` is missing in local development, the app allows the fallback password `admin123` and prints a console warning. This fallback is blocked in production by the required environment checks.
+
+## PostgreSQL Production Option
+
+For public Reddit sharing, use PostgreSQL rather than SQLite:
+
+```text
+DATABASE_URL=postgresql://username:password@host:5432/database_name
+```
+
+The app also accepts old `postgres://` URLs and converts them to `postgresql://`.
+
+You usually do not need local pgAdmin for deployment. On platforms such as Render or Railway, create a managed PostgreSQL database, copy its connection string, and set it as `DATABASE_URL` for the web service.
+
+## Production Start Command
+
+The project includes:
+
+```text
+Procfile
+runtime.txt
+```
+
+Production start command:
+
+```text
+gunicorn app:app
+```
+
+Local development can still use:
+
+```powershell
+python app.py
+```
 
 ## Admin Pages
 
@@ -91,7 +137,9 @@ After login, the dashboard is:
 http://127.0.0.1:5000/admin/export
 ```
 
-The dashboard includes filters, charts, latest filtered responses, CSV export links, a report link, logout, and a clear-data button for testing.
+The dashboard includes filters, charts, latest filtered responses, CSV export links, report link, logout, and admin password change.
+
+The clear-data button is available only outside production. In `APP_ENV=production`, both the button and the clearing route are disabled.
 
 Readable seminar report:
 
@@ -119,19 +167,24 @@ Example filtered export:
 http://127.0.0.1:5000/admin/export.csv?source_platform=reddit_frankfurt&q_area=banking_district
 ```
 
-## Source Tracking
+## Reddit Source Tracking
 
-Share source-specific links without collecting personal identifiers:
+Use this link pattern for Reddit Frankfurt:
 
 ```text
-http://your-domain.com/?source=reddit_frankfurt
-http://your-domain.com/?source=linkedin
-http://your-domain.com/?source=offline_tablet
-http://your-domain.com/?source=whatsapp
-http://your-domain.com/?source=qr_code
+https://your-domain.com/?source=reddit_frankfurt
 ```
 
-Only the source string is stored in `source_platform`.
+Other examples:
+
+```text
+https://your-domain.com/?source=linkedin
+https://your-domain.com/?source=offline_tablet
+https://your-domain.com/?source=whatsapp
+https://your-domain.com/?source=qr_code
+```
+
+Only the source string is stored in `source_platform`. No Reddit usernames are stored.
 
 ## Duplicate Submission Prevention
 
@@ -154,3 +207,13 @@ Trotzdem erneut teilnehmen || Participate again anyway
 ```
 
 This is not IP-based tracking and does not permanently block anyone.
+
+## Git Hygiene
+
+The `.gitignore` excludes local secrets, local databases, virtual environments, IDE settings, and Python cache files. Do not commit:
+
+```text
+.env
+data/survey.db
+.venv/
+```

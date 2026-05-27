@@ -102,6 +102,7 @@ h3 {
 
 .subtitle,
 .privacy-note,
+.trust-note,
 .muted {
   color: var(--muted);
 }
@@ -274,7 +275,8 @@ button:hover,
   max-width: 460px;
 }
 
-.login-form {
+.login-form,
+.settings-form {
   display: grid;
   gap: 18px;
 }
@@ -410,8 +412,17 @@ button:hover,
 }
 
 .table-card,
+.settings-card,
 .danger-zone {
   margin-top: 18px;
+}
+
+.settings-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-form button {
+  align-self: end;
 }
 
 .table-wrap {
@@ -501,7 +512,8 @@ th {
   }
 
   .admin-grid,
-  .filters-form {
+  .filters-form,
+  .settings-form {
     grid-template-columns: 1fr;
   }
 

@@ -19,6 +19,7 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Text, inspect, text
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 load_dotenv()
@@ -148,11 +149,22 @@ class ResponseEntry(db.Model):
     comments = db.Column(Text)
 
 
+class AdminSetting(db.Model):
+    __tablename__ = "admin_settings"
+
+    key = db.Column(db.Text, primary_key=True)
+    value = db.Column(Text, nullable=False)
+
+
 def create_app():
     app = Flask(__name__)
+    validate_production_config()
     app.config["SECRET_KEY"] = get_secret_key()
     app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = is_production()
 
     db.init_app(app)
 
@@ -175,6 +187,28 @@ def get_database_uri():
     return "sqlite:///" + os.path.join(data_dir, "survey.db")
 
 
+def is_production():
+    return os.getenv("APP_ENV", "development").lower() == "production"
+
+
+def validate_production_config():
+    if not is_production():
+        return
+
+    missing = []
+    if not os.getenv("DATABASE_URL"):
+        missing.append("DATABASE_URL")
+    elif os.getenv("DATABASE_URL", "").startswith("sqlite"):
+        missing.append("non-SQLite DATABASE_URL")
+    if not os.getenv("SECRET_KEY"):
+        missing.append("SECRET_KEY")
+    if not os.getenv("ADMIN_PASSWORD") and not os.getenv("ADMIN_PASSWORD_HASH"):
+        missing.append("ADMIN_PASSWORD or ADMIN_PASSWORD_HASH")
+    if missing:
+        joined = ", ".join(missing)
+        raise RuntimeError(f"Production configuration missing required environment variable(s): {joined}")
+
+
 def get_secret_key():
     secret_key = os.getenv("SECRET_KEY")
     if secret_key:
@@ -194,6 +228,22 @@ def get_admin_password():
 def initialize_database():
     db.create_all()
     ensure_response_columns()
+    initialize_admin_password_hash()
+
+
+def initialize_admin_password_hash():
+    existing = db.session.get(AdminSetting, "admin_password_hash")
+    if existing:
+        return
+
+    env_hash = os.getenv("ADMIN_PASSWORD_HASH")
+    if env_hash:
+        password_hash = env_hash
+    else:
+        password_hash = generate_password_hash(get_admin_password())
+
+    db.session.add(AdminSetting(key="admin_password_hash", value=password_hash))
+    db.session.commit()
 
 
 def ensure_response_columns():
@@ -247,7 +297,7 @@ def register_routes(app):
 
         if request.method == "POST":
             password = request.form.get("password", "")
-            if password == get_admin_password():
+            if verify_admin_password(password):
                 session["admin_logged_in"] = True
                 return redirect(url_for("admin_export"))
             flash("Falsches Passwort. || Incorrect password.", "error")
@@ -280,6 +330,7 @@ def register_routes(app):
             filters=filters,
             filter_options=load_filter_options(),
             export_query=request.query_string.decode("utf-8"),
+            allow_clear_data=not is_production(),
         )
 
     @app.route("/admin/report")
@@ -312,9 +363,35 @@ def register_routes(app):
         rows = query_responses(filters).order_by(ResponseEntry.id.asc()).all()
         return export_statistics_csv(load_statistics(rows))
 
+    @app.route("/admin/change-password", methods=["POST"])
+    @admin_required
+    def change_admin_password():
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not verify_admin_password(current_password):
+            flash("Aktuelles Passwort ist falsch. || Current password is incorrect.", "error")
+            return redirect(url_for("admin_export"))
+        if new_password != confirm_password:
+            flash("Neue Passwörter stimmen nicht überein. || New passwords do not match.", "error")
+            return redirect(url_for("admin_export"))
+        if len(new_password) < 16:
+            flash("Das neue Passwort muss mindestens 16 Zeichen haben. || The new password must be at least 16 characters.", "error")
+            return redirect(url_for("admin_export"))
+
+        setting = db.session.get(AdminSetting, "admin_password_hash")
+        setting.value = generate_password_hash(new_password)
+        db.session.commit()
+        flash("Admin-Passwort wurde aktualisiert. || Admin password has been updated.", "success")
+        return redirect(url_for("admin_export"))
+
     @app.route("/admin/clear-data", methods=["POST"])
     @admin_required
     def clear_data():
+        if is_production():
+            flash("Daten löschen ist in Produktion deaktiviert. || Clearing data is disabled in production.", "error")
+            return redirect(url_for("admin_export"))
         confirmation = request.form.get("confirm_clear")
         if confirmation == "yes":
             db.session.query(ResponseEntry).delete()
@@ -323,6 +400,10 @@ def register_routes(app):
         else:
             flash("Löschen wurde nicht bestätigt. || Clear action was not confirmed.", "error")
         return redirect(url_for("admin_export"))
+
+    @app.route("/health")
+    def health():
+        return {"status": "ok"}
 
 
 def render_survey(form, source_platform=None, status_code=200):
@@ -343,6 +424,13 @@ def admin_required(view_func):
         return view_func(*args, **kwargs)
 
     return wrapped
+
+
+def verify_admin_password(password):
+    setting = db.session.get(AdminSetting, "admin_password_hash")
+    if not setting:
+        return password == get_admin_password()
+    return check_password_hash(setting.value, password)
 
 
 def validate_submission(form):
@@ -612,4 +700,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.getenv("FLASK_DEBUG") == "1")

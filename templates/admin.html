@@ -163,14 +163,35 @@
         </div>
       </section>
 
-      <section class="admin-card danger-zone">
-        <h2>Testdaten löschen || Clear test data</h2>
-        <p>Diese Aktion löscht alle gespeicherten Antworten. || This action clears all saved responses.</p>
-        <form method="post" action="{{ url_for('clear_data') }}" onsubmit="return confirm('Are you sure you want to clear all data?');">
-          <input type="hidden" name="confirm_clear" value="yes">
-          <button class="danger-button" type="submit">Clear data</button>
+      <section class="admin-card settings-card">
+        <h2>Admin-Passwort ändern || Change admin password</h2>
+        <form method="post" action="{{ url_for('change_admin_password') }}" class="settings-form">
+          <label>
+            <span>Aktuelles Passwort || Current password</span>
+            <input type="password" name="current_password" required>
+          </label>
+          <label>
+            <span>Neues Passwort || New password</span>
+            <input type="password" name="new_password" minlength="16" required>
+          </label>
+          <label>
+            <span>Neues Passwort wiederholen || Repeat new password</span>
+            <input type="password" name="confirm_password" minlength="16" required>
+          </label>
+          <button type="submit">Passwort speichern || Save password</button>
         </form>
       </section>
+
+      {% if allow_clear_data %}
+        <section class="admin-card danger-zone">
+          <h2>Testdaten löschen || Clear test data</h2>
+          <p>Diese Aktion löscht alle gespeicherten Antworten. In Produktion ist sie deaktiviert. || This action clears all saved responses. It is disabled in production.</p>
+          <form method="post" action="{{ url_for('clear_data') }}" onsubmit="return confirm('Are you sure you want to clear all data?');">
+            <input type="hidden" name="confirm_clear" value="yes">
+            <button class="danger-button" type="submit">Clear data</button>
+          </form>
+        </section>
+      {% endif %}
     {% endif %}
   </main>
 </body>
