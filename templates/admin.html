@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="{% if admin_logged_in %}admin-page{% else %}page compact-page{% endif %}">
+    {% if not admin_logged_in %}
+      <section class="card login-card">
+        <p class="eyebrow">Admin</p>
+        <h1>Admin Login</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="messages" role="alert">
+              {% for category, message in messages %}
+                <p class="message {{ category }}">{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" action="{{ url_for('admin') }}" class="login-form">
+          <label>
+            <span>Passwort || Password</span>
+            <input type="password" name="password" required autofocus>
+          </label>
+          <button type="submit">Einloggen || Log in</button>
+        </form>
+      </section>
+    {% else %}
+      <header class="admin-header">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>Statistik und Export || Statistics and export</h1>
+        </div>
+        <div class="admin-actions">
+          <a class="button-link secondary-link" href="{{ url_for('admin_report') }}{% if export_query %}?{{ export_query }}{% endif %}">Report || Report</a>
+          <form method="post" action="{{ url_for('admin_logout') }}">
+            <button class="secondary-button" type="submit">Logout</button>
+          </form>
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages" role="alert">
+            {% for category, message in messages %}
+              <p class="message {{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="export-panel">
+        <div>
+          <h2>Export</h2>
+          <p>Aktive Filter werden in den CSV-Exports berücksichtigt. || Active filters are applied to CSV exports.</p>
+        </div>
+        <div class="export-actions">
+          <a class="button-link" href="{{ url_for('export_stats_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Statistik CSV || Statistics CSV</a>
+          <a class="button-link secondary-link" href="{{ url_for('export_csv') }}{% if export_query %}?{{ export_query }}{% endif %}">Antworten CSV || Responses CSV</a>
+        </div>
+      </section>
+
+      <section class="admin-card filters-card">
+        <h2>Filter || Filters</h2>
+        <form method="get" action="{{ url_for('admin_export') }}" class="filters-form">
+          {% for field, label in [
+            ('source_platform', 'Quelle || Source'),
+            ('q_area', 'Bereich || Area'),
+            ('q_lunch_time', 'Mittagszeit || Lunch time'),
+            ('q3_price', 'Preis || Price'),
+            ('q4_preorder', 'Vorbestellen || Pre-order')
+          ] %}
+            <label>
+              <span>{{ label }}</span>
+              <select name="{{ field }}">
+                <option value="">Alle || All</option>
+                {% for value, option_label in filter_options[field] %}
+                  <option value="{{ value }}" {% if filters.get(field) == value %}selected{% endif %}>{{ option_label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endfor %}
+          <div class="filter-buttons">
+            <button type="submit">Anwenden || Apply</button>
+            <a class="button-link secondary-link" href="{{ url_for('admin_export') }}">Zurücksetzen || Reset</a>
+          </div>
+        </form>
+      </section>
+
+      <section class="metric-card">
+        <span>Displayed responses</span>
+        <strong>{{ stats.total }}</strong>
+      </section>
+
+      <section class="admin-grid">
+        {% for key, _csv_label, title in stat_sections %}
+          <section class="admin-card">
+            <h2>{{ title }}</h2>
+            <div class="bar-chart" aria-label="{{ title }}">
+              {% for row in stats[key] %}
+                <div class="bar-row">
+                  <div class="bar-label">
+                    <span>{{ row.label }}</span>
+                    <strong>{{ row.count }} ({{ row.percentage }}%)</strong>
+                  </div>
+                  <div class="bar-track">
+                    <span class="bar-fill" style="width: {{ row.percentage }}%"></span>
+                  </div>
+                </div>
+              {% else %}
+                <p class="muted">Keine Daten || No data</p>
+              {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+      </section>
+
+      <section class="admin-card table-card">
+        <h2>Neueste 20 gefilterte Antworten || Latest 20 filtered responses</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>created_at</th>
+                <th>source_platform</th>
+                <th>q1_lunch_type</th>
+                <th>q2_problems</th>
+                <th>q3_price</th>
+                <th>q4_preorder</th>
+                <th>q5_reason_not_use</th>
+                <th>q_lunch_time</th>
+                <th>q_area</th>
+                <th>comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for response in latest_responses %}
+                <tr>
+                  <td>{{ response.created_at }}</td>
+                  <td>{{ response.source_platform or '' }}</td>
+                  <td>{{ response.q1_lunch_type or '' }}</td>
+                  <td>{{ response.q2_problems or '' }}</td>
+                  <td>{{ response.q3_price or '' }}</td>
+                  <td>{{ response.q4_preorder or '' }}</td>
+                  <td>{{ response.q5_reason_not_use or '' }}</td>
+                  <td>{{ response.q_lunch_time or '' }}</td>
+                  <td>{{ response.q_area or '' }}</td>
+                  <td>{{ response.comments or '' }}</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="10">Noch keine Antworten. || No responses yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-card danger-zone">
+        <h2>Testdaten löschen || Clear test data</h2>
+        <p>Diese Aktion löscht alle gespeicherten Antworten. || This action clears all saved responses.</p>
+        <form method="post" action="{{ url_for('clear_data') }}" onsubmit="return confirm('Are you sure you want to clear all data?');">
+          <input type="hidden" name="confirm_clear" value="yes">
+          <button class="danger-button" type="submit">Clear data</button>
+        </form>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>

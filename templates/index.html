@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kurzfragebogen für Berufstätige || Short questionnaire for working people</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="page">
+    <section class="card survey-card">
+      <header class="survey-header">
+        <p class="eyebrow">anonym || anonymous</p>
+        <h1 class="bilingual-text">Kurzfragebogen für Berufstätige || Short questionnaire for working people</h1>
+        <p class="subtitle bilingual-text">Thema: Mittagessen in Frankfurt · Dauer: 1–2 Minuten · anonym · keine Werbung || Topic: Lunch in Frankfurt · Duration: 1–2 minutes · anonymous · no advertising</p>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages" role="alert">
+            {% for category, message in messages %}
+              <p class="message {{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div id="duplicate-notice" class="duplicate-notice" hidden>
+        <p>Sie haben bereits teilgenommen. || You have already participated.</p>
+        <button type="button" class="secondary-button" id="participate-again">Trotzdem erneut teilnehmen || Participate again anyway</button>
+      </div>
+
+      <div id="survey-content">
+        <p class="bilingual-text">Hallo! Ich bin Student und führe für ein Seminar eine kurze Umfrage zum Mittagessen in Frankfurt durch. Bitte wählen Sie einfach die passende Antwort aus. Vielen Dank für Ihre Unterstützung! || Hello! I am a student conducting a short seminar survey about lunch in Frankfurt. Please simply select the answer that fits best. Thank you very much for your support!</p>
+
+        <p class="privacy-note privacy-box bilingual-text">Diese Umfrage ist anonym. Es werden keine Namen, E-Mail-Adressen, IP-Adressen oder Reddit-Nutzernamen gespeichert. Bitte geben Sie keine persönlichen Daten in das Kommentarfeld ein. || This survey is anonymous. No names, email addresses, IP addresses, or Reddit usernames are stored. Please do not enter personal data in the comment field.</p>
+
+        <form method="post" class="survey-form" id="survey-form">
+          <input type="hidden" name="source_platform" value="{{ source_platform or form.get('source_platform', '') }}">
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 1 von 7 || Question 1 of 7</p>
+            <legend class="bilingual-text">Was essen Sie an einem normalen Arbeitstag meistens mittags? || What do you usually eat for lunch on a normal working day?</legend>
+            {% for value, label in options.q1_lunch_type %}
+              <label class="option option-card">
+                <input type="radio" name="q1_lunch_type" value="{{ value }}" required {% if form.get('q1_lunch_type') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+            <label class="other-field">
+              <span>Sonstiges || Other</span>
+              <input type="text" name="q1_other" value="{{ form.get('q1_other', '') }}" autocomplete="off">
+            </label>
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 2 von 7 || Question 2 of 7</p>
+            <legend class="bilingual-text">Was stört Sie beim Mittagessen am meisten? (Mehrfachauswahl möglich) || What bothers you most about lunch? (Multiple answers possible)</legend>
+            {% set selected_q2 = form.getlist('q2_problems') if form.getlist is defined else [] %}
+            {% for value, label in options.q2_problems %}
+              <label class="option option-card">
+                <input type="checkbox" name="q2_problems" value="{{ value }}" {% if value in selected_q2 %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+            <label class="other-field">
+              <span>Sonstiges || Other</span>
+              <input type="text" name="q2_other" value="{{ form.get('q2_other', '') }}" autocomplete="off">
+            </label>
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 3 von 7 || Question 3 of 7</p>
+            <legend class="bilingual-text">Was wäre für ein warmes, zuverlässiges Mittagessen zur Abholung ein fairer Preis? || What would be a fair price for a warm, reliable lunch for pickup?</legend>
+            {% for value, label in options.q3_price %}
+              <label class="option option-card">
+                <input type="radio" name="q3_price" value="{{ value }}" required {% if form.get('q3_price') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 4 von 7 || Question 4 of 7</p>
+            <legend class="bilingual-text">Würden Sie ein warmes Gericht, z. B. Pasta, Bowl oder Reisgericht, vorbestellen und zu einer festen Uhrzeit ohne Warten abholen? || Would you pre-order a warm meal, e.g. pasta, bowl, or rice dish, and pick it up at a fixed time without waiting?</legend>
+            {% for value, label in options.q4_preorder %}
+              <label class="option option-card">
+                <input type="radio" name="q4_preorder" value="{{ value }}" required {% if form.get('q4_preorder') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 5 von 7 || Question 5 of 7</p>
+            <legend class="bilingual-text">Was wäre der wichtigste Grund, warum Sie so ein Angebot nicht nutzen würden? || What would be the most important reason why you would not use such an offer?</legend>
+            {% for value, label in options.q5_reason_not_use %}
+              <label class="option option-card">
+                <input type="radio" name="q5_reason_not_use" value="{{ value }}" required {% if form.get('q5_reason_not_use') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+            <label class="other-field">
+              <span>Sonstiges || Other</span>
+              <input type="text" name="q5_other" value="{{ form.get('q5_other', '') }}" autocomplete="off">
+            </label>
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 6 von 7 || Question 6 of 7</p>
+            <legend class="bilingual-text">Wann essen Sie normalerweise zu Mittag? || When do you usually have lunch?</legend>
+            {% for value, label in options.q_lunch_time %}
+              <label class="option option-card">
+                <input type="radio" name="q_lunch_time" value="{{ value }}" {% if form.get('q_lunch_time') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <fieldset class="question-block">
+            <p class="progress-text">Frage 7 von 7 || Question 7 of 7</p>
+            <legend class="bilingual-text">In welchem Bereich arbeiten oder essen Sie normalerweise zu Mittag? || In which area do you usually work or have lunch?</legend>
+            {% for value, label in options.q_area %}
+              <label class="option option-card">
+                <input type="radio" name="q_area" value="{{ value }}" {% if form.get('q_area') == value %}checked{% endif %}>
+                <span class="bilingual-text">{{ label }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+
+          <label class="textarea-label question-block">
+            <span class="progress-text">Optional || Optional</span>
+            <span class="bilingual-text">Zusätzliche Anmerkungen / Vorschläge || Additional comments / suggestions</span>
+            <textarea name="comments" rows="4">{{ form.get('comments', '') }}</textarea>
+            <small class="field-note">Bitte keine persönlichen Daten eingeben. || Please do not enter personal data.</small>
+          </label>
+
+          <button type="submit">Umfrage beenden || Finish survey</button>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
