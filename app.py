@@ -117,7 +117,7 @@ ALL_OPTION_SETS = {
 }
 
 STAT_SECTIONS = [
-    ("q1", "Q1 lunch type", "Frage 1: Mittagessen"),
+    ("q1", "Q1 lunch type", "Frage 1: Mittagessen (Mehrfachauswahl)"),
     ("q2", "Q2 lunch problems", "Frage 2: Probleme beim Mittagessen"),
     ("q3", "Q3 fair price", "Frage 3: Fairer Preis"),
     ("q4", "Q4 preorder willingness", "Frage 4: Vorbestellen"),
@@ -452,7 +452,6 @@ def is_valid_admin_password(password):
 def validate_submission(form):
     errors = []
     required_fields = {
-        "q1_lunch_type": Q1_OPTIONS,
         "q3_price": Q3_OPTIONS,
         "q4_preorder": Q4_OPTIONS,
         "q5_reason_not_use": Q5_OPTIONS,
@@ -465,6 +464,13 @@ def validate_submission(form):
             errors.append("Bitte beantworten Sie alle Pflichtfragen. || Please answer all required questions.")
         elif value not in allowed_values:
             errors.append("Ungültige Antwort erkannt. || Invalid answer detected.")
+
+    q1_values = form.getlist("q1_lunch_type")
+    allowed_q1_values = option_values(Q1_OPTIONS)
+    if not q1_values:
+        errors.append("Bitte wählen Sie bei Frage 1 mindestens eine Antwort aus. || Please select at least one answer for question 1.")
+    elif any(value not in allowed_q1_values for value in q1_values):
+        errors.append("Ungültige Mehrfachauswahl bei Frage 1 erkannt. || Invalid multiple-choice selection detected for question 1.")
 
     optional_fields = {
         "q_lunch_time": LUNCH_TIME_OPTIONS,
@@ -487,7 +493,7 @@ def save_response(form):
     entry = ResponseEntry(
         created_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         source_platform=safe_source(form.get("source_platform")),
-        q1_lunch_type=form.get("q1_lunch_type"),
+        q1_lunch_type=json.dumps(form.getlist("q1_lunch_type")),
         q1_other=safe_trim(form.get("q1_other")),
         q2_problems=json.dumps(form.getlist("q2_problems")),
         q2_other=safe_trim(form.get("q2_other")),
@@ -552,7 +558,7 @@ def distinct_filter_options(field_name):
 def load_statistics(responses):
     total = len(responses)
     stats = {"total": total}
-    stats["q1"] = count_single_choice(responses, "q1_lunch_type", Q1_OPTIONS)
+    stats["q1"] = count_multiple_choice(responses, "q1_lunch_type", Q1_OPTIONS, allow_legacy_scalar=True)
     stats["q2"] = count_multiple_choice(responses, "q2_problems", Q2_OPTIONS)
     stats["q3"] = count_single_choice(responses, "q3_price", Q3_OPTIONS)
     stats["q4"] = count_single_choice(responses, "q4_preorder", Q4_OPTIONS)
@@ -572,13 +578,16 @@ def count_single_choice(responses, field_name, options):
     return format_counts(counts, options, len(responses))
 
 
-def count_multiple_choice(responses, field_name, options):
+def count_multiple_choice(responses, field_name, options, allow_legacy_scalar=False):
     counts = {value: 0 for value, _label in options}
     for response in responses:
+        raw_value = getattr(response, field_name, None)
         try:
-            selected_values = json.loads(getattr(response, field_name, None) or "[]")
+            selected_values = json.loads(raw_value or "[]")
         except json.JSONDecodeError:
-            selected_values = []
+            selected_values = [raw_value] if allow_legacy_scalar and raw_value else []
+        if isinstance(selected_values, str) and allow_legacy_scalar:
+            selected_values = [selected_values]
         if not isinstance(selected_values, list):
             selected_values = []
         for value in selected_values:

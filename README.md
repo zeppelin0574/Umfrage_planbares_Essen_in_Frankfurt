@@ -18,6 +18,8 @@ German text || English text
 
 There are no separate German and English pages. The database stores normalized values such as `canteen`, `banking_district`, or `rather_yes`, not the full bilingual labels.
 
+Question 1 and question 2 allow multiple selections. Their normalized selections are stored as JSON text arrays.
+
 ## Privacy
 
 The app does not store names, email addresses, IP addresses, Reddit usernames, user agents, or device IDs. It only stores selected survey answers, optional comments, timestamps, and the optional `source` URL parameter.

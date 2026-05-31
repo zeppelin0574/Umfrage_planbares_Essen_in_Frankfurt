@@ -42,10 +42,11 @@
 
           <fieldset class="question-block">
             <p class="progress-text">Frage 1 von 7 || Question 1 of 7</p>
-            <legend class="bilingual-text">Was essen Sie an einem normalen Arbeitstag meistens mittags? || What do you usually eat for lunch on a normal working day?</legend>
+            <legend class="bilingual-text">Was essen Sie an einem normalen Arbeitstag meistens mittags? (Mehrfachauswahl möglich) || What do you usually eat for lunch on a normal working day? (Multiple answers possible)</legend>
+            {% set selected_q1 = form.getlist('q1_lunch_type') if form.getlist is defined else [] %}
             {% for value, label in options.q1_lunch_type %}
               <label class="option option-card">
-                <input type="radio" name="q1_lunch_type" value="{{ value }}" required {% if form.get('q1_lunch_type') == value %}checked{% endif %}>
+                <input type="checkbox" name="q1_lunch_type" value="{{ value }}" {% if value in selected_q1 %}checked{% endif %}>
                 <span class="bilingual-text">{{ label }}</span>
               </label>
             {% endfor %}

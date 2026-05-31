@@ -24,4 +24,16 @@
     notice.hidden = true;
     content.hidden = false;
   });
+
+  form.addEventListener("submit", function (event) {
+    var selectedLunchTypes = form.querySelectorAll(
+      'input[name="q1_lunch_type"]:checked'
+    );
+    if (selectedLunchTypes.length === 0) {
+      event.preventDefault();
+      alert(
+        "Bitte wählen Sie bei Frage 1 mindestens eine Antwort aus. || Please select at least one answer for question 1."
+      );
+    }
+  });
 })();
